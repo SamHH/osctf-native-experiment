@@ -1,0 +1,10 @@
+[package]
+name = "game_attempt_1"
+version = "0.1.0"
+authors = ["Sam A. Horvath-Hunt <samhh.web@gmail.com>"]
+
+[[bin]]
+name = "game-attempt-1"
+
+[dependencies]
+"piston_window" = "*"
