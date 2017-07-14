@@ -13,17 +13,17 @@ fn main() {
         WindowSettings::new("Hello World! :-)", [640, 480])
         .exit_on_esc(true)
         .vsync(true)
+        .opengl(OpenGL::V3_2)
         .build().unwrap();
 
-    let mut window_size: [f64; 2] = [0.0, 0.0];
     let mut fps_counter = FPSCounter::new();
 
     while let Some(e) = window.next() {
         match e {
             Input::Render(r) => {
-                window_size = [r.width as f64, r.height as f64];
                 window.draw_2d(&e, |c, g| {
-                    // Here we can access the functions here: http://docs.piston.rs/mush/graphics/fn.ellipse.html
+                    // Here we can access the functions here:
+                    // http://docs.piston.rs/mush/graphics/
 
                     // Background color
                     clear([1.0; 4], g);
@@ -31,11 +31,11 @@ fn main() {
                     // Ball
                     ellipse(ball1.color, ball1.position, c.transform, g);
                 });
-                println!("{:.0} FPS", fps_counter.get_fps());
+                // println!("{:.0} FPS", fps_counter.get_fps());
             }
 
             Input::Update(u) => {
-                ball1.update(u.dt, window_size);
+                ball1.update(u.dt);
                 fps_counter.update(u.dt, 0.25);
             }
 
@@ -44,10 +44,16 @@ fn main() {
                            Button::Keyboard(k) => {
                                match k {
                                    Key::W => {
-                                       ball1.change_velocity(1.1);
+                                       ball1.apply_movement("up");
+                                   }
+                                   Key::A => {
+                                       ball1.apply_movement("left");
                                    }
                                    Key::S => {
-                                       ball1.change_velocity(0.9);
+                                       ball1.apply_movement("down");
+                                   }
+                                   Key::D => {
+                                       ball1.apply_movement("right");
                                    }
                                    Key::F5 => {
                                        // Reset the ball
