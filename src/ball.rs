@@ -1,12 +1,12 @@
-pub struct ColoredRect {
+pub struct Ball {
     pub color: [f32; 4],
     pub position: [f64; 4],
     velocity: [f64; 2]
 }
 
-impl ColoredRect {
+impl Ball {
     pub fn new() -> Self {
-        ColoredRect {
+        Ball {
             color: [1.0, 1.0, 1.0, 1.0],
             position: [0.0, 0.0, 100.0, 100.0],
             velocity: [0.3, 0.3]

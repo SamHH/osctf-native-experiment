@@ -1,14 +1,14 @@
 extern crate piston_window;
 use piston_window::*;
 
-mod colored_rect;
-use colored_rect::ColoredRect;
+mod ball;
+use ball::Ball;
 
 mod fps_counter;
 use fps_counter::FPSCounter;
 
 fn main() {
-    let mut rect = ColoredRect::new();
+    let mut ball1 = Ball::new();
     let mut window: PistonWindow =
         WindowSettings::new("Hello World! :-)", [640, 480])
         .exit_on_esc(true)
@@ -23,16 +23,19 @@ fn main() {
             Input::Render(r) => {
                 window_size = [r.width as f64, r.height as f64];
                 window.draw_2d(&e, |c, g| {
-                    clear([1.0; 4], g); // Clear to white
-                    rectangle(rect.color, // Color
-                              rect.position, // Position/size
-                              c.transform, g);
+                    // Here we can access the functions here: http://docs.piston.rs/mush/graphics/fn.ellipse.html
+
+                    // Background color
+                    clear([1.0; 4], g);
+
+                    // Ball
+                    ellipse(ball1.color, ball1.position, c.transform, g);
                 });
                 println!("{:.0} FPS", fps_counter.get_fps());
             }
 
             Input::Update(u) => {
-                rect.update(u.dt, window_size);
+                ball1.update(u.dt, window_size);
                 fps_counter.update(u.dt, 0.25);
             }
 
@@ -41,14 +44,14 @@ fn main() {
                            Button::Keyboard(k) => {
                                match k {
                                    Key::W => {
-                                       rect.change_velocity(1.1);
+                                       ball1.change_velocity(1.1);
                                    }
                                    Key::S => {
-                                       rect.change_velocity(0.9);
+                                       ball1.change_velocity(0.9);
                                    }
                                    Key::F5 => {
-                                       // Reset the rectangle
-                                       rect = ColoredRect::new();
+                                       // Reset the ball
+                                       ball1 = Ball::new();
                                    }
                                    _ => {} // Catch all keys
                                };
