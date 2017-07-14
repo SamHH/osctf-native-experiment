@@ -1,46 +1,11 @@
 extern crate piston_window;
 use piston_window::*;
 
-struct ColoredRect {
-    pub color: [f32; 4],
-    pub position: [f64; 4],
-    velocity: [f64; 2]
-}
+mod colored_rect;
+use colored_rect::ColoredRect;
 
-impl ColoredRect {
-    fn new() -> Self {
-        ColoredRect {
-            color: [1.0, 1.0, 1.0, 1.0],
-            position: [0.0, 0.0, 100.0, 100.0],
-            velocity: [0.3, 0.3]
-        }
-    }
-    fn update(&mut self, dt: f64, window_size: [f64; 2]) {
-        // Update color RGB values
-        self.color[0] = Self::update_color(dt as f32, self.color[0], 0.001);
-        self.color[1] = Self::update_color(dt as f32, self.color[1], 0.002);
-        self.color[2] = Self::update_color(dt as f32, self.color[2], 0.003);
-
-        // Invert velocities if we hit a window border, then add velocity to the
-        // current position. Indices represent X (0) and Y (1)
-        for (i, size) in window_size.iter().enumerate() {
-            if
-                self.position[i] + self.position[i + 2] >= size.abs() ||
-                self.position[i] < 0.0
-            { self.velocity[i] = -self.velocity[i]; }
-
-            self.position[i] += self.velocity[i] * dt * 120.0;
-        }
-    }
-    fn update_color(dt: f32, color: f32, change: f32)->f32 {
-        if color <= 0.0 { 1.0 }
-        else { color - (change * dt * 120.0) }
-    }
-    fn change_velocity(&mut self, factor: f64) {
-        self.velocity[0] *= factor;
-        self.velocity[1] *= factor;
-    }
-}
+mod fps_counter;
+use fps_counter::FPSCounter;
 
 fn main() {
     let mut rect = ColoredRect::new();
@@ -51,6 +16,7 @@ fn main() {
         .build().unwrap();
 
     let mut window_size: [f64; 2] = [0.0, 0.0];
+    let mut fps_counter = FPSCounter::new();
 
     while let Some(e) = window.next() {
         match e {
@@ -62,10 +28,14 @@ fn main() {
                               rect.position, // Position/size
                               c.transform, g);
                 });
+                println!("{:.0} FPS", fps_counter.get_fps());
             }
+
             Input::Update(u) => {
                 rect.update(u.dt, window_size);
+                fps_counter.update(u.dt, 0.25);
             }
+
             Input::Press(b) => {
                        match b {
                            Button::Keyboard(k) => {
