@@ -2,11 +2,13 @@ extern crate find_folder;
 extern crate piston_window;
 extern crate update_rate;
 
-use piston_window::*;
-use update_rate::UpdateRateCounter;
+mod config;
+mod balls;
 
-mod ball;
-use ball::Ball;
+use piston_window::{
+    Glyphs,
+    PistonWindow,
+};
 
 fn get_glyphs(window: &PistonWindow) -> Glyphs {
     let assets = find_folder::Search::ParentsThenKids(3, 3).for_folder("assets").unwrap();
@@ -19,9 +21,24 @@ fn get_glyphs(window: &PistonWindow) -> Glyphs {
 }
 
 fn main() {
+    use piston_window::{
+        clear,
+        ellipse,
+        Button,
+        Input,
+        Key,
+        OpenGL,
+        Text,
+        Transformed,
+        WindowSettings,
+    };
+    use update_rate::UpdateRateCounter;
+    use balls::team1::Team1Ball;
+    use balls::team2::Team2Ball;
+
     // Window
     let mut window: PistonWindow =
-        WindowSettings::new("Hello World! :-)", [640, 480])
+        WindowSettings::new(config::APP_NAME, [640, 480])
             .exit_on_esc(true)
             .fullscreen(false)
             .vsync(true)
@@ -36,15 +53,14 @@ fn main() {
     let fps_text = Text::new(10);
 
     // Ball
-    let mut ball1 = Ball::new();
+    let mut user_ball = Team1Ball::new([200.0, 200.0]);
+    let other_ball = Team2Ball::new([300.0, 200.0]);
 
     while let Some(e) = window.next() {
         match e {
             Input::Render(r) => {
+                // http://docs.piston.rs/mush/graphics/
                 window.draw_2d(&e, |c, g| {
-                    // Here we can access the functions here:
-                    // http://docs.piston.rs/mush/graphics/
-
                     // Background color
                     clear([1.0; 4], g);
 
@@ -59,41 +75,43 @@ fn main() {
                     );
 
                     // Ball
-                    ellipse(ball1.color, ball1.position, c.transform, g);
+                    ellipse(user_ball.color, user_ball.position, c.transform, g);
+                    ellipse(other_ball.color, other_ball.position, c.transform, g);
                 });
             }
 
             Input::Update(u) => {
-                ball1.update(u.dt);
+                user_ball.update(u.dt);
                 fps_counter.update();
             }
 
             Input::Press(b) => {
-                       match b {
-                           Button::Keyboard(k) => {
-                               match k {
-                                   Key::W => {
-                                       ball1.apply_movement("up");
-                                   }
-                                   Key::A => {
-                                       ball1.apply_movement("left");
-                                   }
-                                   Key::S => {
-                                       ball1.apply_movement("down");
-                                   }
-                                   Key::D => {
-                                       ball1.apply_movement("right");
-                                   }
-                                   Key::F5 => {
-                                       // Reset the ball
-                                       ball1 = Ball::new();
-                                   }
-                                   _ => {} // Catch all keys
-                               };
-                           }
-                           _ => {} // Catch non-keyboard buttons
-                       };
+                match b {
+                    Button::Keyboard(k) => {
+                        match k {
+                            Key::W => {
+                                user_ball.apply_movement("up");
+                            }
+                            Key::A => {
+                                user_ball.apply_movement("left");
+                            }
+                            Key::S => {
+                                user_ball.apply_movement("down");
+                            }
+                            Key::D => {
+                                user_ball.apply_movement("right");
+                            }
+                            Key::X => {
+                                // Reset the ball
+                                user_ball = Team1Ball::new([200.0, 200.0]);
+                            }
+                            _ => {} // Catch all keys
+                        };
                     }
+                    _ => {} // Catch non-keyboard buttons
+                };
+            }
+
             _ => {} // Catch uninteresting events
         }
     }
