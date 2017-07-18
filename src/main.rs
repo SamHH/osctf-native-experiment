@@ -1,22 +1,42 @@
+extern crate find_folder;
 extern crate piston_window;
+extern crate update_rate;
+
 use piston_window::*;
+use update_rate::UpdateRateCounter;
 
 mod ball;
 use ball::Ball;
 
-mod fps_counter;
-use fps_counter::FPSCounter;
+fn get_glyphs(window: &PistonWindow) -> Glyphs {
+    let assets = find_folder::Search::ParentsThenKids(3, 3).for_folder("assets").unwrap();
+    println!("{:?}", assets);
+
+    let ref font = assets.join("FiraSans-Regular.ttf");
+    let factory = window.factory.clone();
+
+    return Glyphs::new(font, factory).unwrap();
+}
 
 fn main() {
-    let mut ball1 = Ball::new();
+    // Window
     let mut window: PistonWindow =
         WindowSettings::new("Hello World! :-)", [640, 480])
-        .exit_on_esc(true)
-        .vsync(true)
-        .opengl(OpenGL::V3_2)
-        .build().unwrap();
+            .exit_on_esc(true)
+            .fullscreen(false)
+            .vsync(true)
+            .opengl(OpenGL::V3_2)
+            .build().unwrap();
 
-    let mut fps_counter = FPSCounter::new();
+    // Assets (font)
+    let mut glyphs = get_glyphs(&window);
+
+    // FPS counter
+    let mut fps_counter = UpdateRateCounter::new(60);
+    let fps_text = Text::new(10);
+
+    // Ball
+    let mut ball1 = Ball::new();
 
     while let Some(e) = window.next() {
         match e {
@@ -28,15 +48,24 @@ fn main() {
                     // Background color
                     clear([1.0; 4], g);
 
+                    // Text
+                    let fps_text_position = c.transform.trans(5.0, 15.0);
+                    fps_text.draw(
+                        &format!("{:.0} FPS", fps_counter.rate()),
+                        &mut glyphs,
+                        &c.draw_state,
+                        fps_text_position,
+                        g
+                    );
+
                     // Ball
                     ellipse(ball1.color, ball1.position, c.transform, g);
                 });
-                // println!("{:.0} FPS", fps_counter.get_fps());
             }
 
             Input::Update(u) => {
                 ball1.update(u.dt);
-                fps_counter.update(u.dt, 0.25);
+                fps_counter.update();
             }
 
             Input::Press(b) => {

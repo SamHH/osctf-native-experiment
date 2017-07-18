@@ -17,7 +17,7 @@ impl Ball {
                 Horizontal size/scaling ?
                 Vertical size/scaling ?
             */
-            position: [0.0, 0.0, 50.0, 50.0],
+            position: [200.0, 200.0, 50.0, 50.0],
             // To be factored into calc (X, Y). Range -1.0 to 1.0
             velocity: [0.0, 0.0],
             max_velocity: 1.0,
