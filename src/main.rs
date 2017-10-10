@@ -5,13 +5,12 @@ extern crate update_rate;
 mod config;
 mod balls;
 
-use piston_window::{
-    Glyphs,
-    PistonWindow,
-};
+use piston_window::{Glyphs, PistonWindow};
 
 fn get_glyphs(window: &PistonWindow) -> Glyphs {
-    let assets = find_folder::Search::ParentsThenKids(3, 3).for_folder("assets").unwrap();
+    let assets = find_folder::Search::ParentsThenKids(3, 3)
+        .for_folder("assets")
+        .unwrap();
     println!("{:?}", assets);
 
     let ref font = assets.join("FiraSans-Regular.ttf");
@@ -21,29 +20,20 @@ fn get_glyphs(window: &PistonWindow) -> Glyphs {
 }
 
 fn main() {
-    use piston_window::{
-        clear,
-        ellipse,
-        Button,
-        Input,
-        Key,
-        OpenGL,
-        Text,
-        Transformed,
-        WindowSettings,
-    };
+    use piston_window::{clear, ellipse, Button, Input, Key, OpenGL, Text, Transformed,
+                        WindowSettings};
     use update_rate::UpdateRateCounter;
     use balls::team1::Team1Ball;
     use balls::team2::Team2Ball;
 
     // Window
-    let mut window: PistonWindow =
-        WindowSettings::new(config::APP_NAME, [640, 480])
-            .exit_on_esc(true)
-            .fullscreen(false)
-            .vsync(true)
-            .opengl(OpenGL::V3_2)
-            .build().unwrap();
+    let mut window: PistonWindow = WindowSettings::new(config::APP_NAME, [640, 480])
+        .exit_on_esc(true)
+        .fullscreen(false)
+        .vsync(true)
+        .opengl(OpenGL::V3_2)
+        .build()
+        .unwrap();
 
     // Assets (font)
     let mut glyphs = get_glyphs(&window);
@@ -71,7 +61,7 @@ fn main() {
                         &mut glyphs,
                         &c.draw_state,
                         fps_text_position,
-                        g
+                        g,
                     );
 
                     // Ball

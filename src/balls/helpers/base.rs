@@ -23,7 +23,7 @@ impl Ball {
             // To be factored into calc (X, Y). Range -1.0 to 1.0
             velocity: [0.0, 0.0],
             max_velocity: 1.0,
-            acceleration_diff: 0.4
+            acceleration_diff: 0.4,
         }
     }
 
@@ -39,16 +39,18 @@ impl Ball {
 
     pub fn apply_movement(&mut self, direction: &str) {
         let (axis, increase) = match direction {
-            "up" => { (1, false) }
-            "down" => { (1, true) }
-            "left" => { (0, false) }
-            "right" => { (0, true) }
-            _ => panic!("Unexpected direction supplied {}", direction)
+            "up" => (1, false),
+            "down" => (1, true),
+            "left" => (0, false),
+            "right" => (0, true),
+            _ => panic!("Unexpected direction supplied {}", direction),
         };
 
-        let calc_accel: f64 =
-            if increase { self.acceleration_diff }
-            else { self.acceleration_diff * -1.0 };
+        let calc_accel: f64 = if increase {
+            self.acceleration_diff
+        } else {
+            self.acceleration_diff * -1.0
+        };
 
         // Don't allow below (max_velocity * -1) or above (max_velocity)
         let mut calc_velocity: f64 = self.max_velocity.min(self.velocity[axis] + calc_accel);
