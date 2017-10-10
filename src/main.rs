@@ -5,7 +5,7 @@ extern crate update_rate;
 mod config;
 mod balls;
 
-use piston_window::{Glyphs, PistonWindow};
+use piston_window::{Glyphs, PistonWindow, TextureSettings};
 
 fn get_glyphs(window: &PistonWindow) -> Glyphs {
     let assets = find_folder::Search::ParentsThenKids(3, 3)
@@ -16,13 +16,13 @@ fn get_glyphs(window: &PistonWindow) -> Glyphs {
     let ref font = assets.join("FiraSans-Regular.ttf");
     let factory = window.factory.clone();
 
-    return Glyphs::new(font, factory).unwrap();
+    return Glyphs::new(font, factory, TextureSettings::new()).unwrap();
 }
 
 fn main() {
-    use piston_window::{clear, ellipse, Button, Input, Key, OpenGL, Text, Transformed,
-                        WindowSettings};
-    use update_rate::UpdateRateCounter;
+    use piston_window::{clear, ellipse, Button, ButtonEvent, Input, Key, Text, RenderEvent, Transformed,
+                        UpdateEvent, WindowSettings};
+    use update_rate::{RateCounter, RollingRateCounter};
     use balls::team1::Team1Ball;
     use balls::team2::Team2Ball;
 
@@ -31,7 +31,7 @@ fn main() {
         .exit_on_esc(true)
         .fullscreen(false)
         .vsync(true)
-        .opengl(OpenGL::V3_2)
+        .opengl(config::OPENGL_VERSION)
         .build()
         .unwrap();
 
@@ -39,70 +39,68 @@ fn main() {
     let mut glyphs = get_glyphs(&window);
 
     // FPS counter
-    let mut fps_counter = UpdateRateCounter::new(60);
+    let mut fps_counter = RollingRateCounter::new(60);
     let fps_text = Text::new(10);
 
-    // Ball
+    // Balls
     let mut user_ball = Team1Ball::new([200.0, 200.0]);
     let other_ball = Team2Ball::new([300.0, 200.0]);
 
-    while let Some(e) = window.next() {
-        match e {
-            Input::Render(r) => {
-                // http://docs.piston.rs/mush/graphics/
-                window.draw_2d(&e, |c, g| {
-                    // Background color
-                    clear([1.0; 4], g);
+    // Game loop
+    while let Some(evt) = window.next() {
+        if let Some(render) = evt.render_args() {
+            // http://docs.piston.rs/mush/graphics/
+            window.draw_2d(&evt, |c, g| {
+                // Background color
+                clear([1.0; 4], g);
 
-                    // Text
-                    let fps_text_position = c.transform.trans(5.0, 15.0);
-                    fps_text.draw(
-                        &format!("{:.0} FPS", fps_counter.rate()),
-                        &mut glyphs,
-                        &c.draw_state,
-                        fps_text_position,
-                        g,
-                    );
+                // Text
+                let fps_text_position = c.transform.trans(5.0, 15.0);
+                fps_text.draw(
+                    &format!("{:.0} FPS", fps_counter.rate()),
+                    &mut glyphs,
+                    &c.draw_state,
+                    fps_text_position,
+                    g,
+                );
 
-                    // Ball
-                    ellipse(user_ball.color, user_ball.position, c.transform, g);
-                    ellipse(other_ball.color, other_ball.position, c.transform, g);
-                });
-            }
+                // Ball
+                ellipse(user_ball.color, user_ball.position, c.transform, g);
+                ellipse(other_ball.color, other_ball.position, c.transform, g);
+            });
+        }
 
-            Input::Update(u) => {
-                user_ball.update(u.dt);
-                fps_counter.update();
-            }
+        if let Some(update) = evt.update_args() {
+            user_ball.update(update.dt);
 
-            Input::Press(b) => {
-                match b {
-                    Button::Keyboard(k) => {
-                        match k {
-                            Key::W => {
-                                user_ball.apply_movement("up");
-                            }
-                            Key::A => {
-                                user_ball.apply_movement("left");
-                            }
-                            Key::S => {
-                                user_ball.apply_movement("down");
-                            }
-                            Key::D => {
-                                user_ball.apply_movement("right");
-                            }
-                            Key::X => {
-                                // Reset the ball
-                                user_ball = Team1Ball::new([200.0, 200.0]);
-                            }
-                            _ => {} // Catch all keys
-                        };
-                    }
-                    _ => {} // Catch non-keyboard buttons
-                };
-            }
+            fps_counter.update();
+        }
 
-            _ => {} // Catch uninteresting events
+        if let Some(btn) = evt.button_args() {
+            match btn.button {
+                Button::Keyboard(key) => {
+                    match key {
+                        Key::W => {
+                            user_ball.apply_movement("up");
+                        }
+                        Key::A => {
+                            user_ball.apply_movement("left");
+                        }
+                        Key::S => {
+                            user_ball.apply_movement("down");
+                        }
+                        Key::D => {
+                            user_ball.apply_movement("right");
+                        }
+                        Key::X => {
+                            // Reset the ball
+                            user_ball = Team1Ball::new([200.0, 200.0]);
+                        }
+                        _ => {} // Catch all keys
+                    };
+                }
+                _ => {} // Catch non-keyboard buttons
+            };
         }
     }
 }
