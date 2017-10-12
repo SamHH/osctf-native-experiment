@@ -20,7 +20,7 @@ fn get_glyphs(window: &PistonWindow) -> Glyphs {
 }
 
 fn main() {
-    use piston_window::{clear, ellipse, Button, ButtonEvent, Input, Key, Text, RenderEvent, Transformed,
+    use piston_window::{clear, ellipse, Button, ButtonEvent, Key, Text, RenderEvent, Transformed,
                         UpdateEvent, WindowSettings};
     use update_rate::{RateCounter, RollingRateCounter};
     use balls::team1::Team1Ball;
@@ -48,21 +48,22 @@ fn main() {
 
     // Game loop
     while let Some(evt) = window.next() {
-        if let Some(render) = evt.render_args() {
-            // http://docs.piston.rs/mush/graphics/
+        if evt.render_args().is_some() {
             window.draw_2d(&evt, |c, g| {
                 // Background color
                 clear([1.0; 4], g);
 
                 // Text
                 let fps_text_position = c.transform.trans(5.0, 15.0);
-                fps_text.draw(
-                    &format!("{:.0} FPS", fps_counter.rate()),
-                    &mut glyphs,
-                    &c.draw_state,
-                    fps_text_position,
-                    g,
-                );
+                fps_text
+                    .draw(
+                        &format!("{:.0} FPS", fps_counter.rate()),
+                        &mut glyphs,
+                        &c.draw_state,
+                        fps_text_position,
+                        g,
+                    )
+                    .unwrap();
 
                 // Ball
                 ellipse(user_ball.color, user_ball.position, c.transform, g);
