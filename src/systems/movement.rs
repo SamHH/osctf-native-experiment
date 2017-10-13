@@ -18,7 +18,6 @@ impl<'a> System<'a> for UpdatePos {
         let dt = delta.0;
 
         for (vel, pos) in (&vel, &mut pos).join() {
-            println!("{:?}", vel.x);
             pos.x += vel.x * dt;
             pos.y += vel.y * dt;
         }
