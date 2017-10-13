@@ -1,27 +1,12 @@
-extern crate find_folder;
 extern crate piston_window;
 extern crate specs;
 extern crate update_rate;
 
 mod components;
 mod config;
+mod helpers;
 mod resources;
 mod systems;
-
-use piston_window::{Glyphs, PistonWindow, TextureSettings};
-
-// TODO move me to new helpers dir
-fn get_glyphs(window: &PistonWindow) -> Glyphs {
-    let assets = find_folder::Search::ParentsThenKids(3, 3)
-        .for_folder("assets")
-        .unwrap();
-    println!("{:?}", assets);
-
-    let ref font = assets.join("FiraSans-Regular.ttf");
-    let factory = window.factory.clone();
-
-    return Glyphs::new(font, factory, TextureSettings::new()).unwrap();
-}
 
 fn main() {
     use components::player::Player;
@@ -30,8 +15,8 @@ fn main() {
     use components::renderable::Model::Ball;
     use components::team::Team;
     use components::velocity::Vel;
-    use piston_window::{clear, ellipse, Button, ButtonEvent, ButtonState, Key, Text, RenderEvent, Transformed,
-                        UpdateEvent, WindowSettings};
+    use helpers::glyphs;
+    use piston_window::{clear, ellipse, Button, ButtonEvent, ButtonState, Key, PistonWindow, Text, RenderEvent, Transformed, UpdateEvent, WindowSettings};
     use resources::player_input::PlayerInput;
     use resources::dt::DeltaTime;
     use specs::{DispatcherBuilder, Join, World};
@@ -47,7 +32,7 @@ fn main() {
         .unwrap();
 
     // Assets (font)
-    let mut glyphs = get_glyphs(&window);
+    let mut glyphs = glyphs::get(&window);
 
     // FPS counter
     let mut fps_counter = RollingRateCounter::new(60);
