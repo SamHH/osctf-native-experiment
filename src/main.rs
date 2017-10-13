@@ -1,30 +1,26 @@
-extern crate find_folder;
 extern crate piston_window;
+extern crate specs;
 extern crate update_rate;
 
+mod components;
 mod config;
-mod balls;
-
-use piston_window::{Glyphs, PistonWindow, TextureSettings};
-
-fn get_glyphs(window: &PistonWindow) -> Glyphs {
-    let assets = find_folder::Search::ParentsThenKids(3, 3)
-        .for_folder("assets")
-        .unwrap();
-    println!("{:?}", assets);
-
-    let ref font = assets.join("FiraSans-Regular.ttf");
-    let factory = window.factory.clone();
-
-    return Glyphs::new(font, factory, TextureSettings::new()).unwrap();
-}
+mod helpers;
+mod resources;
+mod systems;
 
 fn main() {
-    use piston_window::{clear, ellipse, Button, ButtonEvent, Key, Text, RenderEvent, Transformed,
-                        UpdateEvent, WindowSettings};
+    use components::player::Player;
+    use components::position::Pos;
+    use components::renderable::Renderable;
+    use components::renderable::Model::Ball;
+    use components::team::Team;
+    use components::velocity::Vel;
+    use helpers::{balls, glyphs, teams};
+    use piston_window::{clear, ellipse, Button, ButtonEvent, ButtonState, Key, PistonWindow, Text, RenderEvent, Transformed, UpdateEvent, WindowSettings};
+    use resources::player_input::PlayerInput;
+    use resources::dt::DeltaTime;
+    use specs::{DispatcherBuilder, Join, World};
     use update_rate::{RateCounter, RollingRateCounter};
-    use balls::team1::Team1Ball;
-    use balls::team2::Team2Ball;
 
     // Window
     let mut window: PistonWindow = WindowSettings::new(config::APP_NAME, [640, 480])
@@ -36,24 +32,43 @@ fn main() {
         .unwrap();
 
     // Assets (font)
-    let mut glyphs = get_glyphs(&window);
+    let mut glyphs = glyphs::get(&window);
 
     // FPS counter
     let mut fps_counter = RollingRateCounter::new(60);
     let fps_text = Text::new(10);
 
-    // Balls
-    let mut user_ball = Team1Ball::new([200.0, 200.0]);
-    let other_ball = Team2Ball::new([300.0, 200.0]);
+    // Define ECS world and its components
+    let mut world = World::new();
+    world.register::<Player>();
+    world.register::<Pos>();
+    world.register::<Renderable>();
+    world.register::<Team>();
+    world.register::<Vel>();
+
+    // Define teams and create ECS ball entities
+    let (team1, team2) = teams::get_std();
+    balls::create_player(&mut world, team1);
+    balls::create_other(&mut world, team2);
+
+    // Add ECS resources w/ initial values
+    world.add_resource(PlayerInput { up: false, down: false, left: false, right: false });
+    world.add_resource(DeltaTime(0.0));
+
+    // Build an ECS dispatcher, and add the systems to it
+    let mut dispatcher = DispatcherBuilder::new()
+        .add(systems::input::InterpretInput, "interpret_input", &[])
+        .add(systems::movement::UpdatePos, "update_pos", &["interpret_input"])
+        .build();
 
     // Game loop
     while let Some(evt) = window.next() {
         if evt.render_args().is_some() {
             window.draw_2d(&evt, |c, g| {
-                // Background color
+                // Render background color
                 clear([1.0; 4], g);
 
-                // Text
+                // Render text
                 let fps_text_position = c.transform.trans(5.0, 15.0);
                 fps_text
                     .draw(
@@ -65,42 +80,85 @@ fn main() {
                     )
                     .unwrap();
 
-                // Ball
-                ellipse(user_ball.color, user_ball.position, c.transform, g);
-                ellipse(other_ball.color, other_ball.position, c.transform, g);
+                // Render ECS entities
+                let positions = world.read::<Pos>();
+                let renderables = world.read::<Renderable>();
+                let teams = world.read::<Team>();
+
+                for entity in world.entities().join() {
+                    if let (
+                        Some(ren),
+                        Some(pos),
+                    ) = (
+                        renderables.get(entity),
+                        positions.get(entity),
+                    ) {
+                        if ren.model == Ball {
+                            // Priority: team, individual. Fallback: transparent.
+                            let color_rgba: [f32; 4] = match teams.get(entity) {
+                                Some(team) => team.color_rgba,
+                                None => match ren.color {
+                                    Some(color) => color,
+                                    None => [0.0; 4],
+                                },
+                            };
+
+                            ellipse(
+                                color_rgba,
+                                [pos.x, pos.y, 50.0, 50.0], // X, Y, W, H
+                                c.transform, // ?
+                                g, // ?
+                            );
+                        }
+                    }
+                }
             });
         }
 
         if let Some(update) = evt.update_args() {
-            user_ball.update(update.dt);
-
+            // Update FPS counter
             fps_counter.update();
+
+            // Update ECS resources
+            {
+                let mut delta = world.write_resource::<DeltaTime>();
+                delta.0 = update.dt;
+            }
+
+            // Execute all ECS systems
+            dispatcher.dispatch(&mut world.res);
         }
 
         if let Some(btn) = evt.button_args() {
+            let btn_active: bool =
+                if btn.state == ButtonState::Press { true }
+                else { false };
+
             match btn.button {
                 Button::Keyboard(key) => {
+                    let mut input = world.write_resource::<PlayerInput>();
+
                     match key {
                         Key::W => {
-                            user_ball.apply_movement("up");
+                            input.up = btn_active;
                         }
                         Key::A => {
-                            user_ball.apply_movement("left");
+                            input.left = btn_active;
                         }
                         Key::S => {
-                            user_ball.apply_movement("down");
+                            input.down = btn_active;
                         }
                         Key::D => {
-                            user_ball.apply_movement("right");
+                            input.right = btn_active;
                         }
-                        Key::X => {
-                            // Reset the ball
-                            user_ball = Team1Ball::new([200.0, 200.0]);
-                        }
-                        _ => {} // Catch all keys
+                        // Key::X => {
+                        //     // Reset the ball
+                        //     // user_ball = Team1Ball::new([200.0, 200.0]);
+                        // }
+                        _ => {}
                     };
                 }
-                _ => {} // Catch non-keyboard buttons
+                _ => {}
             };
         }
     }

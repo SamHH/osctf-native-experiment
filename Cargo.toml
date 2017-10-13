@@ -8,6 +8,8 @@ name = "game-attempt-1"
 path = "./src/main.rs"
 
 [dependencies]
-"piston_window" = "0.72.0"
-"find_folder" = "0.3.0"
-"update_rate" = "2.0.0"
+find_folder = "0.3.0"
+# nphysics2d = "0.7.2"
+piston_window = "0.72.0"
+specs = "0.10.0"
+update_rate = "2.0.0"
