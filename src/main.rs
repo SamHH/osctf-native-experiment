@@ -15,8 +15,7 @@ fn main() {
     use components::renderable::Model::Ball;
     use components::team::Team;
     use components::velocity::Vel;
-    use helpers::glyphs;
-    use helpers::teams;
+    use helpers::{balls, glyphs, teams};
     use piston_window::{clear, ellipse, Button, ButtonEvent, ButtonState, Key, PistonWindow, Text, RenderEvent, Transformed, UpdateEvent, WindowSettings};
     use resources::player_input::PlayerInput;
     use resources::dt::DeltaTime;
@@ -47,24 +46,10 @@ fn main() {
     world.register::<Team>();
     world.register::<Vel>();
 
-    // Define teams
+    // Define teams and create ECS ball entities
     let (team1, team2) = teams::get_std();
-
-    // Balls
-    world.create_entity()
-        .with(Renderable { model: Ball, color: None })
-        .with(Player)
-        .with(team1)
-        .with(Pos { x: 200.0, y: 200.0 })
-        .with(Vel { x: 0.0, y: 0.0 })
-        .build();
-
-    world.create_entity()
-        .with(Renderable { model: Ball, color: None })
-        .with(team2)
-        .with(Pos { x: 300.0, y: 300.0 })
-        .with(Vel { x: 0.0, y: 0.0 })
-        .build();
+    balls::create_player(&mut world, team1);
+    balls::create_other(&mut world, team2);
 
     // Add ECS resources w/ initial values
     world.add_resource(PlayerInput { up: false, down: false, left: false, right: false });
