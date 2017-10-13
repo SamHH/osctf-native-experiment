@@ -10,6 +10,7 @@ mod systems;
 
 use piston_window::{Glyphs, PistonWindow, TextureSettings};
 
+// TODO move me to new helpers dir
 fn get_glyphs(window: &PistonWindow) -> Glyphs {
     let assets = find_folder::Search::ParentsThenKids(3, 3)
         .for_folder("assets")
@@ -23,13 +24,15 @@ fn get_glyphs(window: &PistonWindow) -> Glyphs {
 }
 
 fn main() {
+    use components::player::Player;
     use components::position::Pos;
     use components::renderable::Renderable;
     use components::renderable::Model::Ball;
     use components::team::Team;
     use components::velocity::Vel;
-    use piston_window::{clear, ellipse, Button, ButtonEvent, Key, Text, RenderEvent, Transformed,
+    use piston_window::{clear, ellipse, Button, ButtonEvent, ButtonState, Key, Text, RenderEvent, Transformed,
                         UpdateEvent, WindowSettings};
+    use resources::player_input::PlayerInput;
     use resources::dt::DeltaTime;
     use specs::{DispatcherBuilder, Join, World};
     use update_rate::{RateCounter, RollingRateCounter};
@@ -65,6 +68,7 @@ fn main() {
 
     // Define ECS world and its components
     let mut world = World::new();
+    world.register::<Player>();
     world.register::<Pos>();
     world.register::<Renderable>();
     world.register::<Team>();
@@ -73,23 +77,27 @@ fn main() {
     // Balls
     world.create_entity()
         .with(Renderable { model: Ball, color: None })
+        .with(Player)
         .with(std_team_1)
         .with(Pos { x: 200.0, y: 200.0 })
+        .with(Vel { x: 0.0, y: 0.0 })
         .build();
 
     world.create_entity()
         .with(Renderable { model: Ball, color: None })
         .with(std_team_2)
         .with(Pos { x: 300.0, y: 300.0 })
+        .with(Vel { x: 0.0, y: 0.0 })
         .build();
 
     // Add ECS resources w/ initial values
+    world.add_resource(PlayerInput { up: false, down: false, left: false, right: false });
     world.add_resource(DeltaTime(0.0));
 
     // Build an ECS dispatcher, and add the systems to it
     let mut dispatcher = DispatcherBuilder::new()
-        .add(systems::controls::InterpretControls, "interpret_controls", &[])
-        .add(systems::movement::UpdatePos, "update_pos", &["interpret_controls"])
+        .add(systems::input::InterpretInput, "interpret_input", &[])
+        .add(systems::movement::UpdatePos, "update_pos", &["interpret_input"])
         .build();
 
     // Game loop
@@ -161,29 +169,35 @@ fn main() {
         }
 
         if let Some(btn) = evt.button_args() {
+            let btn_active: bool =
+                if btn.state == ButtonState::Press { true }
+                else { false };
+
             match btn.button {
                 Button::Keyboard(key) => {
+                    let mut input = world.write_resource::<PlayerInput>();
+
                     match key {
                         Key::W => {
-                            // user_ball.apply_movement("up");
+                            input.up = btn_active;
                         }
                         Key::A => {
-                            // user_ball.apply_movement("left");
+                            input.left = btn_active;
                         }
                         Key::S => {
-                            // user_ball.apply_movement("down");
+                            input.down = btn_active;
                         }
                         Key::D => {
-                            // user_ball.apply_movement("right");
+                            input.right = btn_active;
                         }
-                        Key::X => {
-                            // Reset the ball
-                            // user_ball = Team1Ball::new([200.0, 200.0]);
-                        }
-                        _ => {} // Catch all keys
+                        // Key::X => {
+                        //     // Reset the ball
+                        //     // user_ball = Team1Ball::new([200.0, 200.0]);
+                        // }
+                        _ => {}
                     };
                 }
-                _ => {} // Catch non-keyboard buttons
+                _ => {}
             };
         }
     }
