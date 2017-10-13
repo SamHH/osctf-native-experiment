@@ -9,7 +9,6 @@ mod resources;
 mod systems;
 
 fn main() {
-    use components::player::Player;
     use components::position::Pos;
     use components::renderable::Renderable;
     use components::renderable::Model::Ball;
@@ -17,6 +16,7 @@ fn main() {
     use components::velocity::Vel;
     use helpers::{balls, glyphs, teams};
     use piston_window::{clear, ellipse, Button, ButtonEvent, ButtonState, Key, PistonWindow, Text, RenderEvent, Transformed, UpdateEvent, WindowSettings};
+    use resources::player_entity::PlayerEntity;
     use resources::player_input::PlayerInput;
     use resources::dt::DeltaTime;
     use specs::{DispatcherBuilder, Join, World};
@@ -40,18 +40,13 @@ fn main() {
 
     // Define ECS world and its components
     let mut world = World::new();
-    world.register::<Player>();
     world.register::<Pos>();
     world.register::<Renderable>();
     world.register::<Team>();
     world.register::<Vel>();
 
-    // Define teams and create ECS ball entities
-    let (team1, team2) = teams::get_std();
-    balls::create_player(&mut world, team1);
-    balls::create_other(&mut world, team2);
-
     // Add ECS resources w/ initial values
+    world.add_resource(PlayerEntity(None));
     world.add_resource(PlayerInput { up: false, down: false, left: false, right: false });
     world.add_resource(DeltaTime(0.0));
 
@@ -60,6 +55,11 @@ fn main() {
         .add(systems::input::InterpretInput, "interpret_input", &[])
         .add(systems::movement::UpdatePos, "update_pos", &["interpret_input"])
         .build();
+
+    // Define teams and create ECS ball entities
+    let (team1, team2) = teams::get_std();
+    balls::create_player(&mut world, team1);
+    balls::create_other(&mut world, team2);
 
     // Game loop
     while let Some(evt) = window.next() {

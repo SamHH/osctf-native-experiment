@@ -12,9 +12,7 @@ impl<'a> System<'a> for UpdatePos {
         WriteStorage<'a, Pos>,
     );
 
-    fn run(&mut self, data: Self::SystemData) {
-        let (delta, vel, mut pos) = data;
-
+    fn run(&mut self, (delta, vel, mut pos): Self::SystemData) {
         let dt = delta.0;
 
         for (vel, pos) in (&vel, &mut pos).join() {
