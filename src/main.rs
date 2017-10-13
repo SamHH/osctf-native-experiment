@@ -16,6 +16,7 @@ fn main() {
     use components::team::Team;
     use components::velocity::Vel;
     use helpers::glyphs;
+    use helpers::teams;
     use piston_window::{clear, ellipse, Button, ButtonEvent, ButtonState, Key, PistonWindow, Text, RenderEvent, Transformed, UpdateEvent, WindowSettings};
     use resources::player_input::PlayerInput;
     use resources::dt::DeltaTime;
@@ -38,19 +39,6 @@ fn main() {
     let mut fps_counter = RollingRateCounter::new(60);
     let fps_text = Text::new(10);
 
-    // Define teams
-    let std_team_1: Team = Team {
-        id: "std_team_1",
-        name: "Orange Team",
-        color_rgba: [1.0, 0.405, 0.24, 1.0],
-    };
-
-    let std_team_2: Team = Team {
-        id: "std_team_2",
-        name: "Purple Team",
-        color_rgba: [0.332, 0.22, 1.0, 1.0],
-    };
-
     // Define ECS world and its components
     let mut world = World::new();
     world.register::<Player>();
@@ -59,18 +47,21 @@ fn main() {
     world.register::<Team>();
     world.register::<Vel>();
 
+    // Define teams
+    let (team1, team2) = teams::get_std();
+
     // Balls
     world.create_entity()
         .with(Renderable { model: Ball, color: None })
         .with(Player)
-        .with(std_team_1)
+        .with(team1)
         .with(Pos { x: 200.0, y: 200.0 })
         .with(Vel { x: 0.0, y: 0.0 })
         .build();
 
     world.create_entity()
         .with(Renderable { model: Ball, color: None })
-        .with(std_team_2)
+        .with(team2)
         .with(Pos { x: 300.0, y: 300.0 })
         .with(Vel { x: 0.0, y: 0.0 })
         .build();
