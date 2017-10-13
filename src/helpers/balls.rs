@@ -18,8 +18,8 @@ pub fn create_other(world: &mut World, team: Team) -> Entity {
 
 
 // Create a ball, and pass it on as the player resource entity
-pub fn create_player(mut world: &mut World, team: Team) -> Entity {
-    let ball_entity = create_other(&mut world, team);
+pub fn create_player(world: &mut World, team: Team) -> Entity {
+    let ball_entity = create_other(world, team);
 
     let mut player_entity = world.write_resource::<PlayerEntity>();
     player_entity.0 = Some(ball_entity);
