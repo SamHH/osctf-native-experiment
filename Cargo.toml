@@ -1,7 +1,7 @@
 [package]
 name = "osctf-native"
-version = "0.1.0"
-authors = ["Sam A. Horvath-Hunt <samhh.web@gmail.com>"]
+version = "0.0.0"
+authors = ["Sam A. Horvath-Hunt <code@samhh.com>"]
 
 [[bin]]
 name = "game-attempt-1"
@@ -10,6 +10,6 @@ path = "./src/main.rs"
 [dependencies]
 find_folder = "0.3.0"
 # nphysics2d = "0.7.2"
-piston_window = "0.72.0"
-specs = "0.10.0"
+piston_window = "0.80.0"
+specs = "0.11.2"
 update_rate = "2.0.0"

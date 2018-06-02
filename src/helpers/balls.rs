@@ -21,7 +21,7 @@ pub fn create_other(world: &mut World, team: Team) -> Entity {
 pub fn create_player(mut world: &mut World, team: Team) -> Entity {
     let ball_entity = create_other(&mut world, team);
 
-    world.write::<Player>().insert(ball_entity, Player);
+    world.write_storage::<Player>().insert(ball_entity, Player).unwrap();
 
     return ball_entity;
 }

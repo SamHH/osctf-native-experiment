@@ -8,20 +8,20 @@ mod helpers;
 mod resources;
 mod systems;
 
-fn main() {
-    use components::player::Player;
-    use components::position::Pos;
-    use components::renderable::Renderable;
-    use components::renderable::Model::Ball;
-    use components::team::Team;
-    use components::velocity::Vel;
-    use helpers::{balls, glyphs, teams};
-    use piston_window::{clear, ellipse, Button, ButtonEvent, ButtonState, Key, PistonWindow, Text, RenderEvent, Transformed, UpdateEvent, WindowSettings};
-    use resources::player_input::PlayerInput;
-    use resources::dt::DeltaTime;
-    use specs::{DispatcherBuilder, Join, World};
-    use update_rate::{RateCounter, RollingRateCounter};
+use components::player::Player;
+use components::position::Pos;
+use components::renderable::Renderable;
+use components::renderable::Model::Ball;
+use components::team::Team;
+use components::velocity::Vel;
+use helpers::{balls, glyphs, teams};
+use piston_window::{clear, ellipse, Button, ButtonEvent, ButtonState, Key, PistonWindow, Text, RenderEvent, Transformed, UpdateEvent, WindowSettings};
+use resources::player_input::PlayerInput;
+use resources::dt::DeltaTime;
+use specs::{DispatcherBuilder, Join, World};
+use update_rate::{RateCounter, RollingRateCounter};
 
+fn main() {
     // Window
     let mut window: PistonWindow = WindowSettings::new(config::APP_NAME, [640, 480])
         .exit_on_esc(true)
@@ -57,8 +57,8 @@ fn main() {
 
     // Build an ECS dispatcher, and add the systems to it
     let mut dispatcher = DispatcherBuilder::new()
-        .add(systems::input::InterpretInput, "interpret_input", &[])
-        .add(systems::movement::UpdatePos, "update_pos", &["interpret_input"])
+        .with(systems::input::InterpretInput, "interpret_input", &[])
+        .with(systems::movement::UpdatePos, "update_pos", &["interpret_input"])
         .build();
 
     // Game loop
@@ -81,9 +81,9 @@ fn main() {
                     .unwrap();
 
                 // Render ECS entities
-                let positions = world.read::<Pos>();
-                let renderables = world.read::<Renderable>();
-                let teams = world.read::<Team>();
+                let positions = world.read_storage::<Pos>();
+                let renderables = world.read_storage::<Renderable>();
+                let teams = world.read_storage::<Team>();
 
                 for entity in world.entities().join() {
                     if let (

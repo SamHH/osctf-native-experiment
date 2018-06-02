@@ -1,13 +1,13 @@
 use components::position::Pos;
 use components::velocity::Vel;
 use resources::dt::DeltaTime;
-use specs::{Fetch, Join, ReadStorage, System, WriteStorage};
+use specs::{Join, Read, ReadStorage, System, WriteStorage};
 
 pub struct UpdatePos;
 
 impl<'a> System<'a> for UpdatePos {
     type SystemData = (
-        Fetch<'a, DeltaTime>,
+        Read<'a, DeltaTime>,
         ReadStorage<'a, Vel>,
         WriteStorage<'a, Pos>,
     );

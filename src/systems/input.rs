@@ -1,13 +1,13 @@
 use components::player::Player;
 use components::velocity::Vel;
 use resources::player_input::PlayerInput;
-use specs::{Fetch, Join, ReadStorage, System, WriteStorage};
+use specs::{Join, Read, ReadStorage, System, WriteStorage};
 
 pub struct InterpretInput;
 
 impl<'a> System<'a> for InterpretInput {
     type SystemData = (
-        Fetch<'a, PlayerInput>,
+        Read<'a, PlayerInput>,
         ReadStorage<'a, Player>,
         WriteStorage<'a, Vel>,
     );
